@@ -1,6 +1,5 @@
 import javax.swing.*;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileInputStream;
@@ -132,16 +131,23 @@ public class WordApp {
 
 		words = new WordRecord[noWords]; // shared array of current words
 
-		// [snip]
+		// TODO: [snip]
 
 		setupGUI(frameX, frameY, yLimit);
 		// Start WordPanel thread - for redrawing animation
-
+		Thread wordPanelT = new Thread(w);
+		wordPanelT.start();
 		int x_inc = (int) frameX / noWords;
-		// initialize shared array of current words
 
+		// initialize shared array of current words
 		for (int i = 0; i < noWords; i++) {
 			words[i] = new WordRecord(dict.getNewWord(), i * x_inc, yLimit);
+		}
+
+		// Start WordManager threads - to control movement and state of words
+		for (int i = 0; i < noWords; i++) {
+			WordManager w = new WordManager(words[i], totalWords);
+			new Thread(w).start();
 		}
 	}
 }

@@ -11,7 +11,7 @@ OUTPUTDIR = out
 $(BINDIR)/%.class:$(SRCDIR)/%.java
 	$(JAVAC) -d $(BINDIR)/ -cp $(BINDIR) $<
 
-CLASSES = Score.class WordDictionary.class WordRecord.class WordPanel.class WordApp.class 
+CLASSES = Score.class WordDictionary.class WordRecord.class WordPanel.class WordManager.class WordApp.class 
 CLASS_FILES = $(CLASSES:%.class=$(BINDIR)/%.class)
 
 default: $(CLASS_FILES)

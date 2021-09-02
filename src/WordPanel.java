@@ -3,6 +3,7 @@ import java.awt.Graphics;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 import javax.swing.JButton;
@@ -26,7 +27,10 @@ public class WordPanel extends JPanel implements Runnable {
 		// draw the words
 		for (int i = 0; i < noWords; i++) {
 			// +20 is y-offset for skeleton so that you can see the words
-			g.drawString(words[i].getWord(), words[i].getX(), words[i].getY() + 20);
+			if (words[i] != null)
+				g.drawString(words[i].getWord(), words[i].getX(), words[i].getY() + 20);
+			else
+				System.out.println("null");
 		}
 
 	}
@@ -39,7 +43,12 @@ public class WordPanel extends JPanel implements Runnable {
 	}
 
 	public void run() {
-		// add in code to animate this
+		// continue refreshing jpanel
+		while (!done) {
+			words = WordApp.words;
+			repaint();
+		}
+
 	}
 
 }
