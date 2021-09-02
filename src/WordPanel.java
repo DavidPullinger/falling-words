@@ -24,17 +24,15 @@ public class WordPanel extends JPanel implements Runnable {
 		g.setColor(Color.black);
 		g.setFont(new Font("Helvetica", Font.PLAIN, 26));
 		// draw the words
-		// animation must be added
 		for (int i = 0; i < noWords; i++) {
-			// g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
-			g.drawString(words[i].getWord(), words[i].getX(), words[i].getY() + 20); // y-offset for skeleton so that
-																						// you can see the words
+			// +20 is y-offset for skeleton so that you can see the words
+			g.drawString(words[i].getWord(), words[i].getX(), words[i].getY() + 20);
 		}
 
 	}
 
 	WordPanel(WordRecord[] words, int maxY) {
-		this.words = words; // will this work?
+		this.words = words;
 		noWords = words.length;
 		done = false;
 		this.maxY = maxY;
