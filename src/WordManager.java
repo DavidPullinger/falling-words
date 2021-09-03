@@ -9,7 +9,6 @@ public class WordManager implements Runnable {
         totalWords = tot;
         noWords = num;
         delay = w.getSpeed();
-        // delay = 1;
     }
 
     public void tick() {
@@ -23,13 +22,28 @@ public class WordManager implements Runnable {
             if (WordApp.score.getTotal() + noWords - 1 < totalWords) // missed words+caught words+words on screen
             {
                 word.resetWord();
-                delay = word.getSpeed(); // change our local record of the score which is set in the constructor
+                delay = word.getSpeed(); // change our local record of the speed which is set in the constructor
+                return;
             } else {
                 word.deactivate();
                 return;
             }
         }
-        // otherwise, word is still dropping
+
+        // check if text field matches this words text
+        if (word.matchWord(WordApp.getCurrentWord())) { // resets word if true
+            // increment score and check if word can be reused
+            WordApp.score.caughtWord(word.getWord().length());
+            if (WordApp.score.getTotal() + noWords - 1 < totalWords) // missed words+caught words+words on screen
+            {
+                delay = word.getSpeed(); // change our local record of the speed which is set in the constructor
+                return;
+            } else {
+                word.deactivate();
+                return;
+            }
+        }
+        // drop word
         word.drop(1);
     }
 
@@ -39,7 +53,7 @@ public class WordManager implements Runnable {
         beforeTime = System.currentTimeMillis();
 
         while (true) {
-            if (WordApp.gameHasStarted) {
+            if (WordApp.gameIsPlaying) {
                 // update word as required
                 tick();
 

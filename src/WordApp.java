@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.Scanner;
-import java.util.concurrent.*;
 //model is separate from the view.
 
 public class WordApp {
@@ -22,8 +21,9 @@ public class WordApp {
 
 	static WordRecord[] words;
 	static volatile boolean done; // must be volatile
-	static volatile boolean gameHasStarted = false;
+	static volatile boolean gameIsPlaying = false; // must be volatile
 	static Score score = new Score();
+	private static String currentWord = "";
 
 	static WordPanel w;
 	static JPanel txt;
@@ -50,13 +50,11 @@ public class WordApp {
 		txt.add(missed);
 		txt.add(scr);
 
-		// [snip]
-
 		final JTextField textEntry = new JTextField("", 20);
 		textEntry.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				String text = textEntry.getText();
-				// [snip]
+				currentWord = text;
 				textEntry.setText("");
 				textEntry.requestFocus();
 			}
@@ -68,28 +66,37 @@ public class WordApp {
 
 		JPanel b = new JPanel();
 		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
-		JButton startB = new JButton("Start");
-		;
 
+		JButton startB = new JButton("Start");
 		// add the listener to the jbutton to handle the "pressed" event
 		startB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				gameHasStarted = true; // let threads know that game has started
+				gameIsPlaying = true; // let threads know that game has started
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
-		JButton endB = new JButton("End");
-		;
 
+		JButton endB = new JButton("End");
 		// add the listener to the jbutton to handle the "pressed" event
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				gameHasStarted = false; // let threads know that game has stopped
+				// TODO
+				// let threads know that game has stopped
+				textEntry.requestFocus(); // return focus to the text entry field
+			}
+		});
+
+		JButton pauseB = new JButton("Pause");
+		// add the listener to the jbutton to handle the "pressed" event
+		pauseB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				gameIsPlaying = false; // let threads know that game has paused
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
 
 		b.add(startB);
+		b.add(pauseB);
 		b.add(endB);
 
 		g.add(b);
@@ -118,6 +125,10 @@ public class WordApp {
 			System.err.println("Problem reading file " + filename + " default dictionary will be used");
 		}
 		return dictStr;
+	}
+
+	public static synchronized String getCurrentWord() {
+		return currentWord;
 	}
 
 	public static void main(String[] args) {
