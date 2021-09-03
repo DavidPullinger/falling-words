@@ -2,6 +2,8 @@ import javax.swing.*;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Color;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -23,6 +25,7 @@ public class WordApp {
 	static volatile boolean done; // must be volatile
 	static volatile boolean gameIsPlaying = false; // must be volatile
 	static Score score = new Score();
+	static Color red = new Color(222, 10, 2);
 	private static String currentWord = "";
 
 	static WordPanel w;
@@ -59,6 +62,7 @@ public class WordApp {
 				textEntry.requestFocus();
 			}
 		});
+		textEntry.setEnabled(false);
 
 		txt.add(textEntry);
 		txt.setMaximumSize(txt.getPreferredSize());
@@ -72,6 +76,7 @@ public class WordApp {
 		startB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				gameIsPlaying = true; // let threads know that game has started
+				textEntry.setEnabled(true); // enable text field
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -80,8 +85,7 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO
-				// let threads know that game has stopped
+				endGame();
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -90,14 +94,28 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		pauseB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				textEntry.setEnabled(false); // disable text field
 				gameIsPlaying = false; // let threads know that game has paused
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
 
+		JButton quitB = new JButton("QUIT");
+		// add the listener to the jbutton to handle the "pressed" event
+		quitB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		quitB.setForeground(red);
+		// center first 3 buttons
+		b.add(Box.createHorizontalGlue());
 		b.add(startB);
 		b.add(pauseB);
 		b.add(endB);
+		// right align quit button
+		b.add(Box.createHorizontalGlue());
+		b.add(quitB);
 
 		g.add(b);
 
@@ -125,6 +143,11 @@ public class WordApp {
 			System.err.println("Problem reading file " + filename + " default dictionary will be used");
 		}
 		return dictStr;
+	}
+
+	public static void endGame() {
+		done = true;
+		score = new Score();
 	}
 
 	public static synchronized String getCurrentWord() {

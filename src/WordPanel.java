@@ -16,7 +16,7 @@ public class WordPanel extends JPanel implements Runnable {
 		int width = getWidth();
 		int height = getHeight();
 		g.clearRect(0, 0, width, height);
-		g.setColor(Color.red);
+		g.setColor(WordApp.red);
 		g.fillRect(0, maxY - 10, width, height);
 
 		g.setColor(Color.black);
