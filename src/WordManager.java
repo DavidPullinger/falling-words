@@ -1,21 +1,35 @@
 public class WordManager implements Runnable {
     private WordRecord word;
     private int totalWords;
-    private int DELAY = 5;
+    private int noWords;
+    private int delay;
 
-    public WordManager(WordRecord w, int tot) {
+    public WordManager(WordRecord w, int tot, int num) {
         word = w;
         totalWords = tot;
+        noWords = num;
+        delay = w.getSpeed();
+        // delay = 1;
     }
 
     public void tick() {
-        if (word == null)
+        // if word has been dropped and can not be restarted
+        if (!word.isActive())
             return;
+        // if word is dropped
         if (word.dropped()) {
-            word.setWord("");
-            word = null;
-            return;
+            // increment missed and check if word can be reused
+            WordApp.score.missedWord();
+            if (WordApp.score.getTotal() + noWords - 1 < totalWords) // missed words+caught words+words on screen
+            {
+                word.resetWord();
+                delay = word.getSpeed(); // change our local record of the score which is set in the constructor
+            } else {
+                word.deactivate();
+                return;
+            }
         }
+        // otherwise, word is still dropping
         word.drop(1);
     }
 
@@ -25,24 +39,25 @@ public class WordManager implements Runnable {
         beforeTime = System.currentTimeMillis();
 
         while (true) {
-            // update word as required
-            tick();
+            if (WordApp.gameHasStarted) {
+                // update word as required
+                tick();
 
-            // calculate time that has elapsed
-            timeDiff = System.currentTimeMillis() - beforeTime;
-            // calculate how long we should wait
-            sleep = DELAY - timeDiff;
+                // calculate time that has elapsed
+                timeDiff = System.currentTimeMillis() - beforeTime;
+                // calculate how long we should wait
+                sleep = delay - timeDiff;
+                if (sleep < 0) {
+                    sleep = 2;
+                }
 
-            if (sleep < 0) {
-                sleep = 2;
+                try {
+                    Thread.sleep(sleep);
+                } catch (InterruptedException e) {
+                    System.out.println(String.format("Thread interrupted: %s", e.getMessage()));
+                }
+                beforeTime = System.currentTimeMillis();
             }
-
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException e) {
-                System.out.println(String.format("Thread interrupted: %s", e.getMessage()));
-            }
-            beforeTime = System.currentTimeMillis();
         }
     }
 

@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -8,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 
 public class WordPanel extends JPanel implements Runnable {
 	public static volatile boolean done;
@@ -27,12 +29,15 @@ public class WordPanel extends JPanel implements Runnable {
 		// draw the words
 		for (int i = 0; i < noWords; i++) {
 			// +20 is y-offset for skeleton so that you can see the words
-			if (words[i] != null)
+			if (words[i].isActive())
 				g.drawString(words[i].getWord(), words[i].getX(), words[i].getY() + 20);
-			else
-				System.out.println("null");
 		}
 
+		// update text fields
+		Component[] c = WordApp.txt.getComponents();
+		((JLabel) (c[0])).setText("Caught: " + WordApp.score.getCaught() + "    ");
+		((JLabel) (c[1])).setText("Missed: " + WordApp.score.getMissed() + "    ");
+		((JLabel) (c[2])).setText("Score: " + WordApp.score.getScore() + "    ");
 	}
 
 	WordPanel(WordRecord[] words, int maxY) {
@@ -42,10 +47,10 @@ public class WordPanel extends JPanel implements Runnable {
 		this.maxY = maxY;
 	}
 
+	@Override
 	public void run() {
 		// continue refreshing jpanel
 		while (!done) {
-			words = WordApp.words;
 			repaint();
 		}
 

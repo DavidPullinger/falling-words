@@ -22,9 +22,11 @@ public class WordApp {
 
 	static WordRecord[] words;
 	static volatile boolean done; // must be volatile
+	static volatile boolean gameHasStarted = false;
 	static Score score = new Score();
 
 	static WordPanel w;
+	static JPanel txt;
 
 	public static void setupGUI(int frameX, int frameY, int yLimit) {
 		// Frame init and dimensions
@@ -39,7 +41,7 @@ public class WordApp {
 		w.setSize(frameX, yLimit + 100);
 		g.add(w);
 
-		JPanel txt = new JPanel();
+		txt = new JPanel();
 		txt.setLayout(new BoxLayout(txt, BoxLayout.LINE_AXIS));
 		JLabel caught = new JLabel("Caught: " + score.getCaught() + "    ");
 		JLabel missed = new JLabel("Missed:" + score.getMissed() + "    ");
@@ -72,7 +74,7 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		startB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// [snip]
+				gameHasStarted = true; // let threads know that game has started
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -82,7 +84,8 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// [snip]
+				gameHasStarted = false; // let threads know that game has stopped
+				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
 
@@ -137,6 +140,7 @@ public class WordApp {
 		// Start WordPanel thread - for redrawing animation
 		Thread wordPanelT = new Thread(w);
 		wordPanelT.start();
+
 		int x_inc = (int) frameX / noWords;
 
 		// initialize shared array of current words
@@ -146,7 +150,7 @@ public class WordApp {
 
 		// Start WordManager threads - to control movement and state of words
 		for (int i = 0; i < noWords; i++) {
-			WordManager w = new WordManager(words[i], totalWords);
+			WordManager w = new WordManager(words[i], totalWords, noWords);
 			new Thread(w).start();
 		}
 	}

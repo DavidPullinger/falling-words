@@ -4,10 +4,11 @@ public class WordRecord {
 	private int y;
 	private int maxY;
 	private boolean dropped;
+	private boolean active;
 
 	private int fallingSpeed;
-	private static int maxWait = 1500;
-	private static int minWait = 100;
+	private static int maxWait = 20;
+	private static int minWait = 5;
 
 	public static WordDictionary dict;
 
@@ -17,6 +18,7 @@ public class WordRecord {
 		y = 0;
 		maxY = 300;
 		dropped = false;
+		active = true;
 		fallingSpeed = (int) (Math.random() * (maxWait - minWait) + minWait);
 	}
 
@@ -78,6 +80,8 @@ public class WordRecord {
 		text = dict.getNewWord();
 		dropped = false;
 		fallingSpeed = (int) (Math.random() * (maxWait - minWait) + minWait);
+		System.out.println(getWord() + ": " + fallingSpeed);
+
 		// System.out.println(getWord() + " falling speed = " + getSpeed());
 
 	}
@@ -97,6 +101,14 @@ public class WordRecord {
 
 	public synchronized boolean dropped() {
 		return dropped;
+	}
+
+	public synchronized void deactivate() {
+		active = false;
+	}
+
+	public synchronized boolean isActive() {
+		return active;
 	}
 
 }
