@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Font;
@@ -19,7 +18,10 @@ public class WordPanel extends JPanel implements Runnable {
 		g.setColor(WordApp.red);
 		g.fillRect(0, maxY - 10, width, height);
 
-		g.setColor(Color.black);
+		g.setColor(WordApp.background);
+		g.fillRect(0, 0, width, maxY - 10);
+
+		g.setColor(WordApp.text);
 		g.setFont(new Font("Helvetica", Font.PLAIN, 26));
 		// draw the words
 		for (int i = 0; i < noWords; i++) {
@@ -45,7 +47,7 @@ public class WordPanel extends JPanel implements Runnable {
 	@Override
 	public void run() {
 		// continue refreshing jpanel
-		while (!done) {
+		while (true) {
 			repaint();
 		}
 

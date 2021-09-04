@@ -3,16 +3,17 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Color;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.Scanner;
-//model is separate from the view.
 
 public class WordApp {
 	// shared variables
-	static int noWords = 4;
+	static int noWords;
 	static int totalWords;
 
 	static int frameX = 1000;
@@ -27,16 +28,22 @@ public class WordApp {
 	static Score score = new Score();
 	static Color red = new Color(222, 10, 2);
 	private static String currentWord = "";
+	static Color background = Color.white;
+	static Color text = new Color(24, 26, 27);
 
+	// jcomponents used in setupGUI
+	static JFrame frame;
+	static JPanel g;
 	static WordPanel w;
 	static JPanel txt;
+	static JPanel b;
 
 	public static void setupGUI(int frameX, int frameY, int yLimit) {
 		// Frame init and dimensions
-		JFrame frame = new JFrame("WordGame");
+		frame = new JFrame("WordGame");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(frameX, frameY);
-		JPanel g = new JPanel();
+		g = new JPanel();
 		g.setLayout(new BoxLayout(g, BoxLayout.PAGE_AXIS));
 		g.setSize(frameX, frameY);
 
@@ -68,20 +75,10 @@ public class WordApp {
 		txt.setMaximumSize(txt.getPreferredSize());
 		g.add(txt);
 
-		JPanel b = new JPanel();
+		b = new JPanel();
 		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
 
-		JButton startB = new JButton("Start");
-		// add the listener to the jbutton to handle the "pressed" event
-		startB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				gameIsPlaying = true; // let threads know that game has started
-				textEntry.setEnabled(true); // enable text field
-				textEntry.requestFocus(); // return focus to the text entry field
-			}
-		});
-
-		JButton endB = new JButton("End");
+		JButton endB = new JButton("End Game");
 		// add the listener to the jbutton to handle the "pressed" event
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -89,13 +86,35 @@ public class WordApp {
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
+		endB.setEnabled(false);
 
 		JButton pauseB = new JButton("Pause");
 		// add the listener to the jbutton to handle the "pressed" event
 		pauseB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				textEntry.setEnabled(false); // disable text field
-				gameIsPlaying = false; // let threads know that game has paused
+				// toggle resume/pause
+				if (gameIsPlaying) {
+					textEntry.setEnabled(false); // disable text field
+					gameIsPlaying = false; // let threads know that game has paused
+					pauseB.setText("Resume");
+				} else {
+					textEntry.setEnabled(true); // enable text field
+					gameIsPlaying = true; // let threads know that game has started
+					pauseB.setText("Pause");
+				}
+				textEntry.requestFocus(); // return focus to the text entry field
+			}
+		});
+		pauseB.setEnabled(false);
+
+		JButton startB = new JButton("Start Game");
+		// add the listener to the jbutton to handle the "pressed" event
+		startB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				gameIsPlaying = true; // let threads know that game has started
+				textEntry.setEnabled(true); // enable text field
+				endB.setEnabled(true);
+				pauseB.setEnabled(true);
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -108,11 +127,23 @@ public class WordApp {
 			}
 		});
 		quitB.setForeground(red);
-		// center first 3 buttons
+
+		JButton toggleB = new JButton("Toggle Appearance");
+		// add the listener to the jbutton to handle the "pressed" event
+		toggleB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				toggleAppearance();
+				textEntry.requestFocus(); // return focus to the text entry field
+			}
+		});
+
+		// left align toggle
+		b.add(toggleB);
 		b.add(Box.createHorizontalGlue());
+		// center first 3 buttons
 		b.add(startB);
-		b.add(pauseB);
 		b.add(endB);
+		b.add(pauseB);
 		// right align quit button
 		b.add(Box.createHorizontalGlue());
 		b.add(quitB);
@@ -146,12 +177,66 @@ public class WordApp {
 	}
 
 	public static void endGame() {
-		done = true;
-		score = new Score();
+		// halt words
+		gameIsPlaying = false;
+
+		// display dialog
+		int res = JOptionPane.showOptionDialog(frame, endGamePanel(), "End of Game", JOptionPane.YES_NO_OPTION,
+				JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, QUIT", "Yes" }, null);
+
+		// see what user chose
+		if (res == 0) // if they dont want to play
+			System.exit(0);
+		else if (res == JOptionPane.CLOSED_OPTION) { // if they click cancel
+			if (score.getTotal() == totalWords) { // check if game is over
+				System.exit(0);
+			}
+			gameIsPlaying = true;
+		} else { // if they do want to play
+			score = new Score();
+		}
+	}
+
+	public static JPanel endGamePanel() {
+		// picture of game
+		Icon icon = new ImageIcon("data/scrabble.jpg");
+		JLabel iconLbl = new JLabel(icon);
+
+		// text for user prompt
+		JLabel lbl = new JLabel("<html><br/>Would you like to play again?</html>");
+		JPanel txt = new JPanel();
+		txt.add(Box.createHorizontalGlue());
+		txt.add(lbl, BorderLayout.CENTER);
+		txt.add(Box.createHorizontalGlue());
+
+		// jpanel to center icon and text
+		JPanel mainPanel = new JPanel(new BorderLayout());
+		mainPanel.add(iconLbl, BorderLayout.NORTH);
+		mainPanel.add(txt, BorderLayout.SOUTH);
+
+		return mainPanel;
 	}
 
 	public static synchronized String getCurrentWord() {
 		return currentWord;
+	}
+
+	public static void toggleAppearance() {
+		// swap color of text and background
+		Color temp = background;
+		background = text;
+		text = temp;
+
+		// set background colors
+		g.setBackground(background);
+		txt.setBackground(background);
+		b.setBackground(background);
+
+		// set text colors
+		for (Component c : txt.getComponents()) {
+			if (!(c instanceof JTextField))
+				c.setForeground(text);
+		}
 	}
 
 	public static void main(String[] args) {
