@@ -25,6 +25,9 @@ public class WordManager implements Runnable {
                 delay = word.getSpeed(); // change our local record of the speed which is set in the constructor
             } else {
                 word.deactivate();
+                // check if this is last word
+                if (WordApp.score.getTotal() == totalWords)
+                    WordApp.endGame("Well done! <br/>Would you like to play again?");
             }
         }
         // check if text field matches this words text
@@ -36,6 +39,9 @@ public class WordManager implements Runnable {
                 delay = word.getSpeed(); // change our local record of the speed which is set in the constructor
             } else {
                 word.deactivate();
+                // check if this is last word
+                if (WordApp.score.getTotal() == totalWords)
+                    WordApp.endGame("Well done! <br/>Would you like to play again?");
             }
         }
         // drop word
@@ -72,4 +78,8 @@ public class WordManager implements Runnable {
         }
     }
 
+    public void resetT() {
+        word.resetWord();
+        word.activate();
+    }
 }

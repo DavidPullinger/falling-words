@@ -102,6 +102,10 @@ public class WordRecord {
 		active = false;
 	}
 
+	public synchronized void activate() {
+		active = true;
+	}
+
 	public synchronized boolean isActive() {
 		return active;
 	}

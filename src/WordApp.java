@@ -23,6 +23,7 @@ public class WordApp {
 	static WordDictionary dict = new WordDictionary(); // use default dictionary, to read from file eventually
 
 	static WordRecord[] words;
+	static WordManager[] managers;
 	static volatile boolean done; // must be volatile
 	static volatile boolean gameIsPlaying = false; // must be volatile
 	static Score score = new Score();
@@ -82,7 +83,7 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				endGame();
+				endGame("Would you like to play again?");
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -176,12 +177,12 @@ public class WordApp {
 		return dictStr;
 	}
 
-	public static void endGame() {
+	public static void endGame(String message) {
 		// halt words
 		gameIsPlaying = false;
 
 		// display dialog
-		int res = JOptionPane.showOptionDialog(frame, endGamePanel(), "End of Game", JOptionPane.YES_NO_OPTION,
+		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message), "End of Game", JOptionPane.YES_NO_OPTION,
 				JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, QUIT", "Yes" }, null);
 
 		// see what user chose
@@ -193,17 +194,17 @@ public class WordApp {
 			}
 			gameIsPlaying = true;
 		} else { // if they do want to play
-			score = new Score();
+			reset();
 		}
 	}
 
-	public static JPanel endGamePanel() {
+	public static JPanel endGamePanel(String message) {
 		// picture of game
 		Icon icon = new ImageIcon("data/scrabble.jpg");
 		JLabel iconLbl = new JLabel(icon);
 
 		// text for user prompt
-		JLabel lbl = new JLabel("<html><br/>Would you like to play again?</html>");
+		JLabel lbl = new JLabel("<html><br/>" + message + "</html>");
 		JPanel txt = new JPanel();
 		txt.add(Box.createHorizontalGlue());
 		txt.add(lbl, BorderLayout.CENTER);
@@ -215,6 +216,17 @@ public class WordApp {
 		mainPanel.add(txt, BorderLayout.SOUTH);
 
 		return mainPanel;
+	}
+
+	public static void reset() {
+		// reset words of threads - dont want to end threads
+		for (int i = 0; i < noWords; i++) {
+			managers[i].resetT();
+		}
+		// reset score
+		score = new Score();
+		// continue playing
+		gameIsPlaying = true;
 	}
 
 	public static synchronized String getCurrentWord() {
@@ -252,6 +264,7 @@ public class WordApp {
 		WordRecord.dict = dict; // set the class dictionary for the words.
 
 		words = new WordRecord[noWords]; // shared array of current words
+		managers = new WordManager[noWords]; // shared array of threads managing words
 
 		// TODO: [snip]
 
@@ -269,8 +282,8 @@ public class WordApp {
 
 		// Start WordManager threads - to control movement and state of words
 		for (int i = 0; i < noWords; i++) {
-			WordManager w = new WordManager(words[i], totalWords, noWords);
-			new Thread(w).start();
+			managers[i] = new WordManager(words[i], totalWords, noWords);
+			new Thread(managers[i]).start();
 		}
 	}
 }
