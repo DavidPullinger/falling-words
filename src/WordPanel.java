@@ -1,5 +1,7 @@
 import java.awt.Component;
 import java.awt.Graphics;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.awt.Font;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -67,8 +69,22 @@ public class WordPanel extends JPanel implements Runnable {
 		// continue refreshing jpanel
 		while (true) {
 			repaint();
+			// let developer know if there are any deadlocks
+			if (detectDeadlock())
+				System.out.println("Deadlock found!");
+
 		}
 
+	}
+
+	/**
+	 * Detects if the program has a deadlock
+	 */
+	private static boolean detectDeadlock() {
+		ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+		long[] threadIds = threadBean.findDeadlockedThreads();
+		boolean deadLock = threadIds != null && threadIds.length > 0;
+		return deadLock;
 	}
 
 }

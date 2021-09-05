@@ -311,6 +311,8 @@ public class WordApp {
 	 * @param args command line parameters
 	 */
 	public static void main(String[] args) {
+		long pid = ProcessHandle.current().pid();
+		System.out.println(pid);
 		// deal with command line arguments
 		totalWords = Integer.parseInt(args[0]); // total words to fall
 		noWords = Integer.parseInt(args[1]); // total words falling at any point
