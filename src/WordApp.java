@@ -48,6 +48,7 @@ public class WordApp {
 	static WordPanel w;
 	static JPanel txt;
 	static JPanel b;
+	static JButton startB;
 
 	/**
 	 * Sets up the main frame of the GUI
@@ -113,10 +114,14 @@ public class WordApp {
 				// toggle resume/pause
 				if (gameIsPlaying) {
 					textEntry.setEnabled(false); // disable text field
+					endB.setEnabled(false); // disable end button
+					startB.setEnabled(false); // disable start button
 					gameIsPlaying = false; // let threads know that game has paused
 					pauseB.setText("Resume");
 				} else {
 					textEntry.setEnabled(true); // enable text field
+					endB.setEnabled(true); // enable end button
+					startB.setEnabled(true); // enable start button
 					gameIsPlaying = true; // let threads know that game has started
 					pauseB.setText("Pause");
 				}
@@ -125,7 +130,8 @@ public class WordApp {
 		});
 		pauseB.setEnabled(false);
 
-		JButton startB = new JButton("Start Game");
+		// made a class variable so it can be accessed above
+		startB = new JButton("Start Game");
 		// add the listener to the jbutton to handle the "pressed" event
 		startB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -269,6 +275,8 @@ public class WordApp {
 		}
 		// reset score
 		score.resetScore();
+		// reset word
+		currentWord = "";
 		// continue playing
 		gameIsPlaying = true;
 	}
@@ -311,8 +319,6 @@ public class WordApp {
 	 * @param args command line parameters
 	 */
 	public static void main(String[] args) {
-		long pid = ProcessHandle.current().pid();
-		System.out.println(pid);
 		// deal with command line arguments
 		totalWords = Integer.parseInt(args[0]); // total words to fall
 		noWords = Integer.parseInt(args[1]); // total words falling at any point
