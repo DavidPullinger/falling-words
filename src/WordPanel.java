@@ -1,16 +1,25 @@
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Font;
-
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 
+/**
+ * This class contains the graphical interface for the falling words. It
+ * continuously refreshes the score UI components and redraws the falling words
+ */
 public class WordPanel extends JPanel implements Runnable {
-	public static volatile boolean done;
-	private WordRecord[] words;
-	private int noWords;
-	private int maxY;
+	/** words to be displayed on this {@link JPanel} */
+	WordRecord[] words;
+	/** words on screen at any time */
+	int noWords;
+	/** zone where words are eliminated */
+	int maxY;
 
+	/**
+	 * Paints this JPanel component, specifically the falling words and their
+	 * bounding rect
+	 */
 	public void paintComponent(Graphics g) {
 		int width = getWidth();
 		int height = getHeight();
@@ -37,13 +46,22 @@ public class WordPanel extends JPanel implements Runnable {
 		((JLabel) (c[2])).setText("Score: " + WordApp.score.getScore() + "    ");
 	}
 
+	/**
+	 * Parameterized constructor
+	 * 
+	 * @param words words that should fall
+	 * @param maxY  zone where words are eliminated
+	 */
 	WordPanel(WordRecord[] words, int maxY) {
 		this.words = words;
 		noWords = words.length;
-		done = false;
 		this.maxY = maxY;
 	}
 
+	/**
+	 * Actual execution when thread is started. Continuously repaints this
+	 * {@link JPanel}
+	 */
 	@Override
 	public void run() {
 		// continue refreshing jpanel

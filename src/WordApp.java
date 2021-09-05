@@ -1,44 +1,61 @@
 import javax.swing.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.awt.BorderLayout;
 import java.awt.Component;
-
 import java.io.FileInputStream;
 import java.io.IOException;
-
 import java.util.Scanner;
 
+/**
+ * This class is the main controller of the game; it controls I/O from player as
+ * well as initialization and termination of the game. This class also sets up
+ * the main GUI.
+ */
 public class WordApp {
-	// shared variables
+	// variables shared by entire game
+	/** words on screen at any time */
 	static int noWords;
+	/** total words shown in entire game */
 	static int totalWords;
+	/** words that are falling down screen */
+	static WordRecord[] words;
+	/** must be volatile - lets threads know if game is playing */
+	static volatile boolean gameIsPlaying = false;
+	/** score of player */
+	static Score score = new Score();
+	/** use default dictionary, to read from file eventually */
+	static WordDictionary dict = new WordDictionary();
+	/** current word that player has entered in txtfield */
+	static String currentWord = "";
 
+	// variables for look and feel
 	static int frameX = 1000;
 	static int frameY = 600;
 	static int yLimit = 480;
-
-	static WordDictionary dict = new WordDictionary(); // use default dictionary, to read from file eventually
-
-	static WordRecord[] words;
-	static WordManager[] managers;
-	static volatile boolean done; // must be volatile
-	static volatile boolean gameIsPlaying = false; // must be volatile
-	static Score score = new Score();
 	static Color red = new Color(222, 10, 2);
-	private static String currentWord = "";
 	static Color background = Color.white;
 	static Color text = new Color(24, 26, 27);
+	static boolean darkMode = false;
 
-	// jcomponents used in setupGUI
+	// variables for WordApp
+	static WordManager[] managers;
+
+	// jcomponents used in setupGUI and some other classes
 	static JFrame frame;
 	static JPanel g;
 	static WordPanel w;
 	static JPanel txt;
 	static JPanel b;
 
+	/**
+	 * Sets up the main frame of the GUI
+	 * 
+	 * @param frameX preferred width
+	 * @param frameY preferred height
+	 * @param yLimit zone where words are eliminated
+	 */
 	public static void setupGUI(int frameX, int frameY, int yLimit) {
 		// Frame init and dimensions
 		frame = new JFrame("WordGame");
@@ -120,7 +137,7 @@ public class WordApp {
 			}
 		});
 
-		JButton quitB = new JButton("QUIT");
+		JButton quitB = new JButton("Quit");
 		// add the listener to the jbutton to handle the "pressed" event
 		quitB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -129,11 +146,16 @@ public class WordApp {
 		});
 		quitB.setForeground(red);
 
-		JButton toggleB = new JButton("Toggle Appearance");
+		JButton toggleB = new JButton("Dark Mode");
 		// add the listener to the jbutton to handle the "pressed" event
 		toggleB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				toggleAppearance();
+				darkMode = !darkMode; // toggle dark mode boolean
+				if (darkMode)
+					toggleB.setText("Light Mode");
+				else
+					toggleB.setText("Dark Mode");
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -158,6 +180,12 @@ public class WordApp {
 		frame.setVisible(true);
 	}
 
+	/**
+	 * Reads file into WordDictionary
+	 * 
+	 * @param filename name of file containing words
+	 * @return array of Strings, which are the lines of the file
+	 */
 	public static String[] getDictFromFile(String filename) {
 		String[] dictStr = null;
 		try {
@@ -177,13 +205,19 @@ public class WordApp {
 		return dictStr;
 	}
 
+	/**
+	 * Ends current game, showing the player a message and allowing them to restart
+	 * or quit
+	 * 
+	 * @param message message to be displayed to player
+	 */
 	public static void endGame(String message) {
 		// halt words
 		gameIsPlaying = false;
 
 		// display dialog
 		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message), "End of Game", JOptionPane.YES_NO_OPTION,
-				JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, QUIT", "Yes" }, null);
+				JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, quit", "Yes" }, null);
 
 		// see what user chose
 		if (res == 0) // if they dont want to play
@@ -198,6 +232,12 @@ public class WordApp {
 		}
 	}
 
+	/**
+	 * Panel which is displayed when game ends
+	 * 
+	 * @param message message to be displayed to player
+	 * @return a JPanel with an icon and message
+	 */
 	public static JPanel endGamePanel(String message) {
 		// picture of game
 		Icon icon = new ImageIcon("data/scrabble.jpg");
@@ -218,21 +258,34 @@ public class WordApp {
 		return mainPanel;
 	}
 
+	/**
+	 * Calls the {@link WordManager#resetT()} method of {@link WordManager} for all
+	 * threads, and resets score
+	 */
 	public static void reset() {
 		// reset words of threads - dont want to end threads
 		for (int i = 0; i < noWords; i++) {
 			managers[i].resetT();
 		}
 		// reset score
-		score = new Score();
+		score.resetScore();
 		// continue playing
 		gameIsPlaying = true;
 	}
 
+	/**
+	 * Gets the currentWord that has been entered by the user
+	 * 
+	 * @return current word entered by the user
+	 */
 	public static synchronized String getCurrentWord() {
 		return currentWord;
 	}
 
+	/**
+	 * Toggles light and dark mode for this application, setting background and text
+	 * on relevant comps
+	 */
 	public static void toggleAppearance() {
 		// swap color of text and background
 		Color temp = background;
@@ -251,31 +304,37 @@ public class WordApp {
 		}
 	}
 
+	/**
+	 * Main method of this class (and game). It reads in command line parameters and
+	 * initializes the WordRecord array as well as the threads managing them
+	 * 
+	 * @param args command line parameters
+	 */
 	public static void main(String[] args) {
-
 		// deal with command line arguments
 		totalWords = Integer.parseInt(args[0]); // total words to fall
 		noWords = Integer.parseInt(args[1]); // total words falling at any point
 		assert (totalWords >= noWords); // this could be done more neatly
 		String[] tmpDict = getDictFromFile(args[2]); // file of words
+
+		// set the class dictionary for the words.
 		if (tmpDict != null)
 			dict = new WordDictionary(tmpDict);
+		WordRecord.dict = dict;
 
-		WordRecord.dict = dict; // set the class dictionary for the words.
-
+		// set shared variables
 		words = new WordRecord[noWords]; // shared array of current words
 		managers = new WordManager[noWords]; // shared array of threads managing words
 
-		// TODO: [snip]
-
+		// setup UI for this app
 		setupGUI(frameX, frameY, yLimit);
+
 		// Start WordPanel thread - for redrawing animation
 		Thread wordPanelT = new Thread(w);
 		wordPanelT.start();
 
-		int x_inc = (int) frameX / noWords;
-
 		// initialize shared array of current words
+		int x_inc = (int) frameX / noWords;
 		for (int i = 0; i < noWords; i++) {
 			words[i] = new WordRecord(dict.getNewWord(), i * x_inc, yLimit);
 		}
