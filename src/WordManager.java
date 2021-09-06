@@ -77,6 +77,9 @@ public class WordManager implements Runnable {
     /**
      * Actual execution when thread is started. Continuously calls {@link #tick()}
      * at a fixed time (60 fps) if {@link WordApp#gameIsPlaying} is true
+     * 
+     * The code for the animation (with regards to delays, etc.) was implemented
+     * using https://zetcode.com/javagames/animation/ as a guideline
      */
     @Override
     public void run() {

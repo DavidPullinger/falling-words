@@ -41,6 +41,9 @@ public class WordApp {
 
 	// variables for WordApp
 	static WordManager[] managers;
+	static long startTime;
+	static long pausedTime;
+	static long wastedTime = 0;
 
 	// jcomponents used in setupGUI and some other classes
 	static JFrame frame;
@@ -83,7 +86,7 @@ public class WordApp {
 		textEntry.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				String text = textEntry.getText();
-				currentWord = text;
+				setCurrentWord(text);
 				textEntry.setText("");
 				textEntry.requestFocus();
 			}
@@ -112,10 +115,15 @@ public class WordApp {
 		pauseB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// toggle resume/pause text
-				if (gameIsPlaying)
+				if (gameIsPlaying) {
 					pauseB.setText("Resume");
-				else
+					// we must pause the timer
+					pausedTime = System.currentTimeMillis();
+				} else {
 					pauseB.setText("Pause");
+					// increment time that we have wasted while paused
+					wastedTime += System.currentTimeMillis() - pausedTime;
+				}
 
 				// toggle the gameIsPlaying state for threads
 				gameIsPlaying = !gameIsPlaying;
@@ -135,6 +143,7 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		startB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				startTime = System.currentTimeMillis();
 				gameIsPlaying = true; // let threads know that game has started
 				textEntry.setEnabled(true); // enable text field
 				endB.setEnabled(true);
@@ -221,9 +230,12 @@ public class WordApp {
 		// halt words
 		gameIsPlaying = false;
 
+		// calculate elapsed time
+		double elapse = System.currentTimeMillis() - startTime;
+
 		// display dialog
-		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message), "End of Game", JOptionPane.YES_NO_OPTION,
-				JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, quit", "Yes" }, null);
+		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message, elapse), "End of Game",
+				JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, quit", "Yes" }, null);
 
 		// see what user chose
 		if (res == 0) // if they dont want to play
@@ -244,13 +256,17 @@ public class WordApp {
 	 * @param message message to be displayed to player
 	 * @return a JPanel with an icon and message
 	 */
-	public static JPanel endGamePanel(String message) {
+	public static JPanel endGamePanel(String message, double elapse) {
 		// picture of game
 		Icon icon = new ImageIcon("data/scrabble.jpg");
 		JLabel iconLbl = new JLabel(icon);
 
+		System.out.println((elapse - wastedTime) / 60000.0);
+
+		// convert ms to wpm
+		double wpm = Math.round((score.getCaught() * 1.0) / ((elapse - wastedTime) / 60000.0) * 100.0) / 100.0;
 		// text for user prompt
-		JLabel lbl = new JLabel("<html><br/>" + message + "</html>");
+		JLabel lbl = new JLabel("<html><br/>" + message + "<br/><br/>Your typing speed was: " + wpm + "</html>");
 		JPanel txt = new JPanel();
 		txt.add(Box.createHorizontalGlue());
 		txt.add(lbl, BorderLayout.CENTER);
@@ -277,6 +293,9 @@ public class WordApp {
 		score.resetScore();
 		// reset word
 		currentWord = "";
+		// restart timer
+		startTime = System.currentTimeMillis();
+		wastedTime = 0;
 		// continue playing
 		gameIsPlaying = true;
 	}
@@ -288,6 +307,15 @@ public class WordApp {
 	 */
 	public static synchronized String getCurrentWord() {
 		return currentWord;
+	}
+
+	/**
+	 * Sets the currentWord that has been entered by the user
+	 * 
+	 * @param s string to set the current word equal to
+	 */
+	public static synchronized void setCurrentWord(String s) {
+		currentWord = s;
 	}
 
 	/**
