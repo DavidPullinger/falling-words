@@ -41,6 +41,7 @@ public class WordApp {
 
 	// variables for WordApp
 	static WordManager[] managers;
+	static HighScore highScore;
 	static long startTime;
 	static long pausedTime;
 	static long wastedTime = 0;
@@ -230,18 +231,23 @@ public class WordApp {
 		// halt words
 		gameIsPlaying = false;
 
-		// calculate elapsed time
+		// calculate elapsed time and wpm and save
 		double elapse = System.currentTimeMillis() - startTime;
+		double wpm = Math.round(((score.getCaught() * 1.0) / ((elapse - wastedTime) / 60000.0)) * 100.0) / 100.0;
+		highScore.addScore(wpm);
 
 		// display dialog
-		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message, elapse), "End of Game",
+		int res = JOptionPane.showOptionDialog(frame, endGamePanel(message, wpm), "End of Game",
 				JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[] { "No, quit", "Yes" }, null);
 
 		// see what user chose
 		if (res == 0) // if they dont want to play
+		{
+			highScore.saveScores("data/scores.txt");
 			System.exit(0);
-		else if (res == JOptionPane.CLOSED_OPTION) { // if they click cancel
+		} else if (res == JOptionPane.CLOSED_OPTION) { // if they click cancel
 			if (score.getTotal() == totalWords) { // check if game is over
+				highScore.saveScores("data/scores.txt");
 				System.exit(0);
 			}
 			gameIsPlaying = true;
@@ -256,17 +262,14 @@ public class WordApp {
 	 * @param message message to be displayed to player
 	 * @return a JPanel with an icon and message
 	 */
-	public static JPanel endGamePanel(String message, double elapse) {
+	public static JPanel endGamePanel(String message, double wpm) {
 		// picture of game
 		Icon icon = new ImageIcon("data/scrabble.jpg");
 		JLabel iconLbl = new JLabel(icon);
 
-		System.out.println((elapse - wastedTime) / 60000.0);
-
-		// convert ms to wpm
-		double wpm = Math.round((score.getCaught() * 1.0) / ((elapse - wastedTime) / 60000.0) * 100.0) / 100.0;
 		// text for user prompt
-		JLabel lbl = new JLabel("<html><br/>" + message + "<br/><br/>Your typing speed was: " + wpm + "</html>");
+		JLabel lbl = new JLabel("<html><br/>" + message + "<br/><br/>Your typing speed was: " + wpm + "<br/>"
+				+ "which is placed number " + (highScore.getPlacing(wpm)) + " overall</html>");
 		JPanel txt = new JPanel();
 		txt.add(Box.createHorizontalGlue());
 		txt.add(lbl, BorderLayout.CENTER);
@@ -359,6 +362,9 @@ public class WordApp {
 		noWords = Integer.parseInt(args[1]); // total words falling at any point
 		assert (totalWords >= noWords); // this could be done more neatly
 		String[] tmpDict = getDictFromFile(args[2]); // file of words
+
+		// read high scores
+		highScore = new HighScore("data/scores.txt");
 
 		// set the class dictionary for the words.
 		if (tmpDict != null)
