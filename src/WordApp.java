@@ -111,20 +111,20 @@ public class WordApp {
 		// add the listener to the jbutton to handle the "pressed" event
 		pauseB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// toggle resume/pause
-				if (gameIsPlaying) {
-					textEntry.setEnabled(false); // disable text field
-					endB.setEnabled(false); // disable end button
-					startB.setEnabled(false); // disable start button
-					gameIsPlaying = false; // let threads know that game has paused
+				// toggle resume/pause text
+				if (gameIsPlaying)
 					pauseB.setText("Resume");
-				} else {
-					textEntry.setEnabled(true); // enable text field
-					endB.setEnabled(true); // enable end button
-					startB.setEnabled(true); // enable start button
-					gameIsPlaying = true; // let threads know that game has started
+				else
 					pauseB.setText("Pause");
-				}
+
+				// toggle the gameIsPlaying state for threads
+				gameIsPlaying = !gameIsPlaying;
+
+				// disable or enable the buttons and text fields
+				textEntry.setEnabled(gameIsPlaying);
+				endB.setEnabled(gameIsPlaying);
+				startB.setEnabled(gameIsPlaying);
+
 				textEntry.requestFocus(); // return focus to the text entry field
 			}
 		});
@@ -288,6 +288,13 @@ public class WordApp {
 	 */
 	public static synchronized String getCurrentWord() {
 		return currentWord;
+	}
+
+	/**
+	 * Resets the currentWord that has been entered by the user
+	 */
+	public static synchronized void clearCurrentWord() {
+		currentWord = "";
 	}
 
 	/**

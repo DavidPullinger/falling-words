@@ -54,6 +54,8 @@ public class WordManager implements Runnable {
         }
         // check if text field matches this words text
         else if (word.matchWord(WordApp.getCurrentWord())) { // resets word if true
+            // clear word that has been entered into the text field
+
             // increment score and check if word can be reused
             WordApp.score.caughtWord(word.getWord().length());
             if (WordApp.score.getTotal() + noWords - 1 < totalWords) // missed words+caught words+words on screen
