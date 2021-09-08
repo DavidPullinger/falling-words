@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -23,7 +24,7 @@ public class HighScore {
 
         scores = new ArrayList<Double>();
         try {
-            Scanner file = new Scanner(new File(fileName));
+            Scanner file = new Scanner(new File(fileName)).useLocale(Locale.US);
             while (file.hasNextLine()) {
                 Scanner line = new Scanner(file.nextLine());
                 scores.add(line.nextDouble());
